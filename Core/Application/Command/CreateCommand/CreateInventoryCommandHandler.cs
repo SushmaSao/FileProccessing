@@ -1,6 +1,7 @@
 ﻿using Application.Contracts;
 using Domain;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Application.Command.CreateCommand
 {
@@ -8,10 +9,14 @@ namespace Application.Command.CreateCommand
     {
         private readonly IAsyncCommandRepository<InventoryItem> _inventoryItemRepository;
         private readonly IUnitOfWork _unitOfWork;
-        public CreateInventoryCommandHandler(IAsyncCommandRepository<InventoryItem> inventoryItemRepository, IUnitOfWork unitOfWork)
+        private readonly ILogger<CreateInventoryCommandHandler> _logger;
+        public CreateInventoryCommandHandler(IAsyncCommandRepository<InventoryItem> inventoryItemRepository,
+            IUnitOfWork unitOfWork,
+            ILogger<CreateInventoryCommandHandler> logger)
         {
             _inventoryItemRepository = inventoryItemRepository;
             _unitOfWork = unitOfWork;
+            _logger = logger;
         }
 
         public async Task<bool> Handle(CreateInventoryCommand request, CancellationToken cancellationToken)
@@ -37,27 +42,10 @@ namespace Application.Command.CreateCommand
             }
             catch (Exception ex)
             {
-                AddLogs($"{ex.Message}");
+                _logger.LogError(ex.Message);
             }
 
             return result;
         }
-
-        private void AddLogs(string message)
-        {
-
-            string filePath = @"c:\debug\general.txt";
-            if (!File.Exists(filePath))
-            {
-                File.Create(filePath);
-            }
-
-            using (StreamWriter sw = new StreamWriter(filePath, true))
-            {
-                sw.WriteLine(message);
-            }
-
-        }
-
     }
 }

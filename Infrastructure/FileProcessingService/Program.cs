@@ -14,6 +14,8 @@ namespace FileProcessingService
             builder.Services.AddApplicationServices();
             builder.Services.AddInfrastructureService();
             builder.Services.AddPersistenceService(builder.Configuration);
+            builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
+
 
             builder.Services.AddHostedService<Worker>();
 

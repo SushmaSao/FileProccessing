@@ -16,23 +16,24 @@ namespace Infrastructure
             return result;
         }
 
-        public async Task<IAsyncEnumerable<string>> ReadFileLinesAsync(string filePath)
+        public async Task<IAsyncEnumerable<string>> ReadFileLinesAsync(string filePath, CancellationToken cancellationToken)
         {
             // Open the file for asynchronous reading
             var streamReader = new StreamReader(filePath);
 
             // Use the IAsyncEnumerable pattern to ensure proper disposal
-            return ReadLinesAsync(streamReader);
+            return ReadLinesAsync(streamReader, cancellationToken);
         }
 
-        private async IAsyncEnumerable<string> ReadLinesAsync(StreamReader streamReader)
+        private async IAsyncEnumerable<string> ReadLinesAsync(StreamReader streamReader, CancellationToken cancellationToken)
         {
             try
             {
                 string? line;
                 while ((line = await streamReader.ReadLineAsync()) != null)
                 {
-                    yield return line; // Yield each line asynchronously
+                    if (!cancellationToken.IsCancellationRequested)
+                        yield return line; // Yield each line asynchronously
                 }
             }
             finally

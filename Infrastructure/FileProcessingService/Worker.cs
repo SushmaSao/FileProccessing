@@ -19,50 +19,41 @@ namespace FileProcessingService
             while (!stoppingToken.IsCancellationRequested)
             {
 
-                using (var scope = _serviceProvider.CreateScope())
+                try
                 {
-                    var inventoryItemService = scope.ServiceProvider.GetRequiredService<IInventoryItemService>();
-
-                    try
+                    string folderPath = ($@"C:\old_workspace\FileProcessing_POC\Files");
+                    Stopwatch stopwatch2 = Stopwatch.StartNew();
+                    var parallelOptions = new ParallelOptions
                     {
-                        string folderPath = ($@"C:\old_workspace\FileProcessing_POC\Files");
+                        MaxDegreeOfParallelism = 4,
+                        CancellationToken = stoppingToken
+                    };
+                    string[] originalFiles = Directory.GetFiles($"{folderPath}\\Original");
+                    await Parallel.ForEachAsync(originalFiles, parallelOptions, async (filePath, token) =>
+                    {
+                        Console.WriteLine(filePath);
 
-                        foreach (string filePath in Directory.GetFiles($"{folderPath}\\Original"))
+                        string processedFilePath = $"{folderPath}\\Processed\\{Path.GetFileName(filePath)}";
+
+                        using (var scope = _serviceProvider.CreateScope())
                         {
-                            string processedFilePath = $"{folderPath}\\Processed\\{Path.GetFileName(filePath)}";
+                            var inventoryItemService = scope.ServiceProvider.GetRequiredService<IInventoryItemService>();
                             await inventoryItemService.SaveInventoryIntoDatabase(filePath, processedFilePath, string.Empty);
                         }
+                        Console.WriteLine("===========================");
+                    });
 
-                        //Stopwatch stopwatch2 = Stopwatch.StartNew();
-                        //var parallelOptions = new ParallelOptions
-                        //{
-                        //    MaxDegreeOfParallelism = 4
-                        //};
-
-                        //System.Threading.Tasks.Parallel.ForEach((Directory.GetFiles($"{folderPath}\\Original")), parallelOptions, async filePath =>
-                        //{
-                        //    string processedFilePath = $"{folderPath}\\Processed\\{Path.GetFileName(filePath)}";
-                        //    await inventoryItemService.SaveInventoryIntoDatabase(filePath, processedFilePath, string.Empty);
-                        //    Console.WriteLine(processedFilePath);
-                        //    Console.WriteLine("===========================");
-                        //});
-
-                        //stopwatch2.Stop();
-                        //Console.WriteLine($"Elapsed Time Async with Parallel: {stopwatch2.ElapsedMilliseconds} ms");
-
-
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error: {ex.Message}");
-                    }
+                    stopwatch2.Stop();
+                    Console.WriteLine($"Elapsed Time Async with Parallel: {stopwatch2.ElapsedMilliseconds} ms");
                 }
+                catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
+
                 if (_logger.IsEnabled(LogLevel.Information))
                 {
                     _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
                 }
 
-                await Task.Delay(1000, stoppingToken);
+                await Task.Delay(10000, stoppingToken);
             }
         }
 
