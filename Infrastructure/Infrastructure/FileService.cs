@@ -24,15 +24,12 @@ namespace Infrastructure
 
             // Use the IAsyncEnumerable pattern to ensure proper disposal
             string? line;
-            while ((line = await streamReader.ReadLineAsync().ConfigureAwait(false)) != null)
+            while ((line = await streamReader.ReadLineAsync(cancellationToken).ConfigureAwait(false)) != null)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 yield return line; // Yield each line asynchronously
             }
         }
-
-
     }
-
 }
 
