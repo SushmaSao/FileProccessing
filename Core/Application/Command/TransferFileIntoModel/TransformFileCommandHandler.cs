@@ -22,7 +22,7 @@ namespace Application.Command.TransferFileIntoModel
 
             //Read file line by line
             int i = 0;
-            await foreach (var line in await _fileService.ReadFileLinesAsync(request.FilePath))
+            await foreach (var line in _fileService.ReadFileLinesAsync(request.FilePath, cancellationToken))
             {
                 if (i != 0)
                 {

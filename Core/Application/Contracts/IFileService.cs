@@ -7,7 +7,7 @@
         /// </summary>
         /// <param name="filePath">Path of the file to read.</param>
         /// <returns>File content as a string.</returns>
-        public Task<IAsyncEnumerable<string>> ReadFileLinesAsync(string filePath, CancellationToken cancellationToken);
+        public IAsyncEnumerable<string> ReadFileLinesAsync(string filePath, CancellationToken cancellationToken);
 
 
         public bool MoveFile(string sourcePath, string destinationPath);

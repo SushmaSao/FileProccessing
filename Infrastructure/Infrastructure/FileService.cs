@@ -1,4 +1,5 @@
 ﻿using Application.Contracts;
+using System.Runtime.CompilerServices;
 
 namespace Infrastructure
 {
@@ -16,32 +17,22 @@ namespace Infrastructure
             return result;
         }
 
-        public async Task<IAsyncEnumerable<string>> ReadFileLinesAsync(string filePath, CancellationToken cancellationToken)
+        public async IAsyncEnumerable<string> ReadFileLinesAsync(string filePath, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             // Open the file for asynchronous reading
-            var streamReader = new StreamReader(filePath);
+            using var streamReader = new StreamReader(filePath); //Synchronous disposal - for async disposal need to try await using
 
             // Use the IAsyncEnumerable pattern to ensure proper disposal
-            return ReadLinesAsync(streamReader, cancellationToken);
+            string? line;
+            while ((line = await streamReader.ReadLineAsync().ConfigureAwait(false)) != null)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                yield return line; // Yield each line asynchronously
+            }
         }
 
-        private async IAsyncEnumerable<string> ReadLinesAsync(StreamReader streamReader, CancellationToken cancellationToken)
-        {
-            try
-            {
-                string? line;
-                while ((line = await streamReader.ReadLineAsync()) != null)
-                {
-                    if (!cancellationToken.IsCancellationRequested)
-                        yield return line; // Yield each line asynchronously
-                }
-            }
-            finally
-            {
-                // Dispose of the StreamReader after reading the lines
-                streamReader.Dispose();
-            }
-        }
+
     }
 
 }
+
